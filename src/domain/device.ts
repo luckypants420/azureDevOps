@@ -1,15 +1,13 @@
 // Type definitions for DeviceModel
-export interface IDeviceInput {
-    id: string;
-    brand: string;
-    model: string;
-    category: string;
-    totalQuantity: number;
+export interface IDeviceModel {
+  id: string;
+  brand: string;
+  model: string;
+  category: string;
+  totalQuantity: number;
+  createdAt: Date;
 }
 
-export interface IDeviceModel extends IDeviceInput {
-    readonly createdAt: Date;
-}
 
 // Validation error class
 export class ValidationError extends Error {
@@ -20,7 +18,7 @@ export class ValidationError extends Error {
 }
 
 // Validation utility
-const isValidDeviceInput = (input: unknown): input is IDeviceInput => {
+const isValidDeviceInput = (input: unknown): input is IDeviceModel => {
     if (!input || typeof input !== 'object') {
         return false;
     }

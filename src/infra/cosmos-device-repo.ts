@@ -2,6 +2,8 @@ import { CosmosClient, Container, Database } from '@azure/cosmos';
 import { IDeviceModel } from '../domain/device';
 import { IDeviceRepo, RepositoryError } from '../domain/device-repo';
 
+
+
 /**
  * DTO type representing the document shape in Azure Cosmos DB.
  * Separate from the domain model to allow schema flexibility and independent evolution.
