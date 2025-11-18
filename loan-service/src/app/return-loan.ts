@@ -1,0 +1,18 @@
+// src/app/return-loan.ts
+import { getLoanRepo } from "../config/appServices";
+import { markLoanReturned, Loan } from "../domain/loan";
+
+export async function returnLoan(loanId: string): Promise<Loan> {
+  const repo = getLoanRepo();
+  const existing = await repo.getById(loanId);
+
+  if (!existing) {
+    throw new Error(`Loan ${loanId} not found`);
+  }
+
+  const updated = markLoanReturned(existing);
+
+  // TODO later: publish DeviceReturned event to Event Grid
+
+  return await repo.update(updated);
+}
