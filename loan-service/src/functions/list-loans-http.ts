@@ -1,36 +1,62 @@
-// src/functions/list-loans-http.ts
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { listLoansForUser } from "../app/list-loan";
+import { validateJwt } from "../auth/validateJwt";
+import { hasRole } from "../auth/requireRole";
+import { getLoanRepo } from "../config/appServices";
+// import { listLoansForUserUseCase } from "../app/list-loans-usecase";
 
-export async function listLoansHttpHandler(
-    request: HttpRequest,
-    context: InvocationContext
-): Promise<HttpResponseInit> {
-    const userId = request.params.userId;
+async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const claims = await validateJwt(request);
+  if (!claims) {
+    return {
+      status: 401,
+      jsonBody: { error: "Unauthorized: missing or invalid token" },
+    };
+  }
 
-    try {
-        const loans = await listLoansForUser(userId);
-        return {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-            jsonBody: loans
-        };
-    } catch (err: any) {
-        context.error("Error in listLoansHttpHandler", err);
-        return {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-            jsonBody: {
-                error: "Bad Request",
-                message: err?.message ?? "Unknown error"
-            }
-        };
-    }
+  const routeUserId = request.params.userId;
+  if (!routeUserId) {
+    return {
+      status: 400,
+      jsonBody: { error: "userId route parameter is required" },
+    };
+  }
+
+  const tokenUserId = claims.sub;
+  const isStaff = hasRole(claims, "staff");
+
+  // students can only view their own loans
+  if (!isStaff && tokenUserId !== routeUserId) {
+    return {
+      status: 403,
+      jsonBody: { error: "Forbidden: students may only view their own loans" },
+    };
+  }
+
+  try {
+    const loanRepo = getLoanRepo();
+
+    // const listLoansForUser = listLoansForUserUseCase({ loanRepo });
+    // const loans = await listLoansForUser({ userId: routeUserId });
+
+    // TEMP: stub until wired
+    const loans: any[] = [];
+
+    return {
+      status: 200,
+      jsonBody: loans,
+    };
+  } catch (err: any) {
+    context.error("Error listing loans:", err);
+    return {
+      status: 500,
+      jsonBody: { error: "Failed to list loans" },
+    };
+  }
 }
 
-app.http("list-loans-for-user", {
-    methods: ["GET"],
-    authLevel: "anonymous",
-    route: "loans/user/{userId}",
-    handler: listLoansHttpHandler
+app.http("list-loans-http", {
+  methods: ["GET"],
+  route: "loans/user/{userId}",
+  authLevel: "anonymous",
+  handler,
 });

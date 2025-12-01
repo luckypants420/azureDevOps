@@ -296,7 +296,8 @@ VITE_LOANS_API_BASE=https://loans-test-da007-func.azurewebsites.net/api`}
 }
 
 export default App;
-function getErrorMessage(err: unknown): import("react").SetStateAction<string | null> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getErrorMessage(_err: unknown): import("react").SetStateAction<string | null> {
   throw new Error("Function not implemented.");
 }
 

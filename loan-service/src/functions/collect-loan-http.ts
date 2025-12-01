@@ -1,35 +1,56 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { collectLoan } from "../app/collect-loan";
+import { validateJwt } from "../auth/validateJwt";
+import { hasRole } from "../auth/requireRole";
+import { getLoanRepo } from "../config/appServices";
+// import { collectLoanUseCase } from "../app/collect-loan-usecase";
 
-export async function collectLoanHttpHandler(
-  request: HttpRequest,
-  context: InvocationContext
-): Promise<HttpResponseInit> {
-  const id = request.params.id;
-
-  try {
-    const loan = await collectLoan(id);
+async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const claims = await validateJwt(request);
+  if (!claims) {
     return {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-      jsonBody: loan
+      status: 401,
+      jsonBody: { error: "Unauthorized: missing or invalid token" },
     };
-  } catch (err: any) {
-    context.error("Error in collectLoanHttpHandler", err);
+  }
+
+  if (!hasRole(claims, "staff")) {
+    return {
+      status: 403,
+      jsonBody: { error: "Forbidden: only staff can collect loans" },
+    };
+  }
+
+  const loanId = request.params.loanId;
+  if (!loanId) {
     return {
       status: 400,
-      headers: { "Content-Type": "application/json" },
-      jsonBody: {
-        error: "Bad Request",
-        message: err?.message ?? "Unknown error"
-      }
+      jsonBody: { error: "loanId route parameter is required" },
+    };
+  }
+
+  try {
+    const loanRepo = getLoanRepo();
+    // const collectLoan = collectLoanUseCase({ loanRepo });
+    // const updated = await collectLoan({ loanId });
+
+    const updated = { loanId, status: "collected" }; // TEMP stub
+
+    return {
+      status: 200,
+      jsonBody: updated,
+    };
+  } catch (err: any) {
+    context.error("Error collecting loan:", err);
+    return {
+      status: 500,
+      jsonBody: { error: "Failed to collect loan" },
     };
   }
 }
 
-app.http("collect-loan", {
+app.http("collect-loan-http", {
   methods: ["POST"],
-  authLevel: "anonymous", // later: staff only
-  route: "loans/{id}/collect",
-  handler: collectLoanHttpHandler
+  route: "loans/{loanId}/collect",
+  authLevel: "anonymous",
+  handler,
 });
