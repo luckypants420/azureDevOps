@@ -25,8 +25,10 @@ interface Loan {
 const DEVICES_API_BASE = import.meta.env.VITE_DEVICES_API_BASE as string | undefined;
 const LOANS_API_BASE = import.meta.env.VITE_LOANS_API_BASE as string | undefined;
 const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE as string | undefined;
+//this is a custom claim
+const ROLES_CLAIM = "https://loans-app.da007/roles";
 
-// TEMP: until we fully wire userId from JWT, we keep using this:
+// TEMP fallback until everything is 100% wired from token
 const FALLBACK_USER_ID = "student-1";
 
 function App() {
@@ -34,6 +36,12 @@ function App() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [loadingLoans, setLoadingLoans] = useState(false);
+
+  // Staff panel state
+  const [staffLookupUserId, setStaffLookupUserId] = useState("");
+  const [staffLoans, setStaffLoans] = useState<Loan[]>([]);
+  const [loadingStaffLoans, setLoadingStaffLoans] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -48,7 +56,12 @@ function App() {
   console.log("DEVICES_API_BASE =", DEVICES_API_BASE);
   console.log("LOANS_API_BASE =", LOANS_API_BASE);
 
-  // derive current userId – later we’ll read from token claims
+  // derive roles from ID token (in user object)
+  const rawRoles = (user && (user[ROLES_CLAIM] as string[])) || [];
+//  const isStudent = rawRoles.includes("student");
+  const isStaff = rawRoles.includes("Staff");
+
+  // For now, we still use a fallback user id if not logged in
   const currentUserId = user?.sub ?? FALLBACK_USER_ID;
 
   useEffect(() => {
@@ -58,7 +71,6 @@ function App() {
       );
       return;
     }
-    // load data after auth is initialized
     if (!authLoading) {
       void loadDevices();
       void loadLoans();
@@ -68,7 +80,7 @@ function App() {
   async function getAuthHeaders(): Promise<HeadersInit> {
     const headers: HeadersInit = {};
 
-    // Always send JSON for POST
+    // JSON by default for POSTs
     headers["Content-Type"] = "application/json";
 
     if (isAuthenticated && AUTH0_AUDIENCE) {
@@ -101,7 +113,7 @@ function App() {
       setDevices(data);
     } catch (err: unknown) {
       console.error("Error loading devices:", err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err) ?? "Error loading devices");
     } finally {
       setLoadingDevices(false);
     }
@@ -123,7 +135,7 @@ function App() {
       setLoans(data);
     } catch (err: unknown) {
       console.error("Error loading loans:", err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err) ?? "Error loading loans");
     } finally {
       setLoadingLoans(false);
     }
@@ -138,7 +150,7 @@ function App() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          userId: currentUserId,
+          userId: currentUserId, 
           deviceModelId: deviceId,
         }),
       });
@@ -148,16 +160,104 @@ function App() {
         try {
           const body = await res.json();
           if (body?.message) message = body.message;
-        } catch {
-          // ignore JSON parse error
-        }
+        } catch { /* empty */ }
         throw new Error(message);
       }
 
       await loadLoans();
     } catch (err: unknown) {
       console.error("Error creating loan:", err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err) ?? "Error creating loan");
+    }
+  }
+
+  //Staff only helpers
+
+  async function loadStaffLoansForUser(userId: string) {
+    try {
+      setLoadingStaffLoans(true);
+      setError(null);
+
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${LOANS_API_BASE}/loans/user/${userId}`, { headers });
+
+      if (!res.ok) {
+        let message = `Failed to load loans for ${userId}: HTTP ${res.status}`;
+        try {
+          const body = await res.json();
+          if (body?.error) message = body.error;
+        } catch { /* empty */ }
+        throw new Error(message);
+      }
+
+      const data = (await res.json()) as Loan[];
+      setStaffLoans(data);
+    } catch (err: unknown) {
+      console.error("Error loading staff loans:", err);
+      setError(getErrorMessage(err) ?? "Error loading staff loans");
+    } finally {
+      setLoadingStaffLoans(false);
+    }
+  }
+
+  async function collectLoan(loanId: string) {
+    try {
+      setError(null);
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${LOANS_API_BASE}/loans/${loanId}/collect`, {
+        method: "POST",
+        headers,
+      });
+
+      if (!res.ok) {
+        let message = `Failed to collect loan: HTTP ${res.status}`;
+        try {
+          const body = await res.json();
+          if (body?.error) message = body.error;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
+      }
+
+      // Refresh both staff view and personal view, in case they overlap
+      if (staffLookupUserId) {
+        await loadStaffLoansForUser(staffLookupUserId);
+      }
+      await loadLoans();
+    } catch (err: unknown) {
+      console.error("Error collecting loan:", err);
+      setError(getErrorMessage(err) ?? "Error collecting loan");
+    }
+  }
+
+  async function returnLoan(loanId: string) {
+    try {
+      setError(null);
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${LOANS_API_BASE}/loans/${loanId}/return`, {
+        method: "POST",
+        headers,
+      });
+
+      if (!res.ok) {
+        let message = `Failed to return loan: HTTP ${res.status}`;
+        try {
+          const body = await res.json();
+          if (body?.error) message = body.error;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
+      }
+
+      if (staffLookupUserId) {
+        await loadStaffLoansForUser(staffLookupUserId);
+      }
+      await loadLoans();
+    } catch (err: unknown) {
+      console.error("Error returning loan:", err);
+      setError(getErrorMessage(err) ?? "Error returning loan");
     }
   }
 
@@ -180,7 +280,7 @@ function App() {
             API base URLs are not configured. Please create <code>.env</code> in the project root with:
           </p>
           <pre>
-            {`VITE_DEVICES_API_BASE=https://devices-test-da007-func.azurewebsites.net/api
+{`VITE_DEVICES_API_BASE=https://devices-test-da007-func.azurewebsites.net/api
 VITE_LOANS_API_BASE=https://loans-test-da007-func.azurewebsites.net/api`}
           </pre>
         </div>
@@ -197,9 +297,12 @@ VITE_LOANS_API_BASE=https://loans-test-da007-func.azurewebsites.net/api`}
             {isAuthenticated && user ? (
               <>
                 Signed in as <strong>{user.email ?? user.name ?? currentUserId}</strong>
+                {rawRoles.length > 0 && (
+                  <> – Roles: <code>{rawRoles.join(", ")}</code></>
+                )}
               </>
             ) : (
-              <>im not signed in im (using fallback user ID <code>{FALLBACK_USER_ID}</code>).</>
+              <>im not signed in (for now im using fallback user ID <code>{FALLBACK_USER_ID}</code>).</>
             )}
           </p>
         </div>
@@ -215,6 +318,7 @@ VITE_LOANS_API_BASE=https://loans-test-da007-func.azurewebsites.net/api`}
             <button onClick={() => loginWithRedirect()} style={{ padding: "0.4rem 0.8rem" }}>
               Log in
             </button>
+            
           )}
         </div>
       </header>
@@ -226,6 +330,7 @@ VITE_LOANS_API_BASE=https://loans-test-da007-func.azurewebsites.net/api`}
         </div>
       )}
 
+      {/* Student + general section */}
       <section style={{ marginTop: "2rem" }}>
         <h2>Available Devices</h2>
         {loadingDevices ? (
@@ -291,6 +396,82 @@ VITE_LOANS_API_BASE=https://loans-test-da007-func.azurewebsites.net/api`}
           </table>
         )}
       </section>
+
+      {/* Staff-only panel */}
+      {isStaff && (
+        <section style={{ marginTop: "3rem", borderTop: "1px solid #ddd", paddingTop: "1.5rem" }}>
+          <h2>Staff Panel – Manage Loans</h2>
+          <p style={{ color: "#555", marginBottom: "0.75rem" }}>
+            As <strong>staff</strong>, you can look up loans for any user and mark them as collected or returned.
+          </p>
+
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "1rem" }}>
+            <label>
+              User ID:&nbsp;
+              <input
+                type="text"
+                value={staffLookupUserId}
+                onChange={(e) => setStaffLookupUserId(e.target.value)}
+                placeholder="e.g. student-1"
+                style={{ padding: "0.25rem 0.5rem", minWidth: "200px" }}
+              />
+            </label>
+            <button
+              onClick={() => staffLookupUserId && loadStaffLoansForUser(staffLookupUserId)}
+              disabled={!staffLookupUserId}
+            >
+              Load Loans
+            </button>
+          </div>
+
+          {loadingStaffLoans ? (
+            <p>Loading loans for {staffLookupUserId}…</p>
+          ) : staffLoans.length === 0 ? (
+            <p>No loans to show for this user yet.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+              <thead>
+                <tr>
+                  <th align="left">Loan ID</th>
+                  <th align="left">User</th>
+                  <th align="left">Device</th>
+                  <th align="left">Status</th>
+                  <th align="left">Reserved At</th>
+                  <th align="left">Due At</th>
+                  <th align="left">Collected At</th>
+                  <th align="left">Returned At</th>
+                  <th align="left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {staffLoans.map((loan) => (
+                  <tr key={loan.id}>
+                    <td>{loan.id}</td>
+                    <td>{loan.userId}</td>
+                    <td>{loan.deviceModelId}</td>
+                    <td>{loan.status}</td>
+                    <td>{new Date(loan.reservedAt).toLocaleString()}</td>
+                    <td>{new Date(loan.dueAt).toLocaleString()}</td>
+                    <td>{loan.collectedAt ? new Date(loan.collectedAt).toLocaleString() : "-"}</td>
+                    <td>{loan.returnedAt ? new Date(loan.returnedAt).toLocaleString() : "-"}</td>
+                    <td>
+                      <button onClick={() => collectLoan(loan.id)} style={{ marginRight: "0.25rem" }}>
+                        Collect
+                      </button>
+                      <button onClick={() => returnLoan(loan.id)}>
+                        Return
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
+      <p>Raw roles: {JSON.stringify(rawRoles)}</p>
+      <pre>{JSON.stringify(user, null, 2)}</pre>
+
     </div>
   );
 }

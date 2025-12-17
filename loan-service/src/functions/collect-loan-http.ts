@@ -13,7 +13,7 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
     };
   }
 
-  if (!hasRole(claims, "staff")) {
+  if (!hasRole(claims, "Staff")) {
     return {
       status: 403,
       jsonBody: { error: "Forbidden: only staff can collect loans" },

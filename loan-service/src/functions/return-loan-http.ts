@@ -2,7 +2,6 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { validateJwt } from "../auth/validateJwt";
 import { hasRole } from "../auth/requireRole";
 import { getLoanRepo } from "../config/appServices";
-// import { returnLoanUseCase } from "../app/return-loan-usecase";
 
 async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   const claims = await validateJwt(request);
@@ -13,7 +12,7 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
     };
   }
 
-  if (!hasRole(claims, "staff")) {
+  if (!hasRole(claims, "Staff")) {
     return {
       status: 403,
       jsonBody: { error: "Forbidden: only staff can return loans" },

@@ -2,7 +2,6 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { validateJwt } from "../auth/validateJwt";
 import { hasRole } from "../auth/requireRole";
 import { getLoanRepo } from "../config/appServices";
-// import { listLoansForUserUseCase } from "../app/list-loans-usecase";
 
 async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   const claims = await validateJwt(request);
@@ -22,7 +21,7 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
   }
 
   const tokenUserId = claims.sub;
-  const isStaff = hasRole(claims, "staff");
+  const isStaff = hasRole(claims, "Staff");
 
   // students can only view their own loans
   if (!isStaff && tokenUserId !== routeUserId) {
@@ -37,8 +36,7 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
 
     // const listLoansForUser = listLoansForUserUseCase({ loanRepo });
     // const loans = await listLoansForUser({ userId: routeUserId });
-
-    // TEMP: stub until wired
+//temp
     const loans: any[] = [];
 
     return {
