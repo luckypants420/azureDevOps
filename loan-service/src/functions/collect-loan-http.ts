@@ -1,12 +1,25 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { validateJwt } from "../auth/validateJwt";
 import { hasRole } from "../auth/requireRole";
-import { getLoanRepo } from "../config/appServices";
-// import { collectLoanUseCase } from "../app/collect-loan-usecase";
+import { collectLoan } from "../app/collect-loan";
 
 async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  context.log("collect-loan: request received");
+
+  const loanId = request.params.loanId;
+  context.log(`collect-loan: loanId=${loanId}`);
+
+  if (!loanId) {
+    context.log("collect-loan: 400 missing loanId");
+    return {
+      status: 400,
+      jsonBody: { error: "loanId route parameter is required" },
+    };
+  }
+
   const claims = await validateJwt(request);
   if (!claims) {
+    context.log("collect-loan: 401 missing/invalid token");
     return {
       status: 401,
       jsonBody: { error: "Unauthorized: missing or invalid token" },
@@ -14,33 +27,22 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
   }
 
   if (!hasRole(claims, "Staff")) {
+    context.log(`collect-loan: 403 forbidden for sub=${claims.sub}`);
     return {
       status: 403,
       jsonBody: { error: "Forbidden: only staff can collect loans" },
     };
   }
 
-  const loanId = request.params.loanId;
-  if (!loanId) {
-    return {
-      status: 400,
-      jsonBody: { error: "loanId route parameter is required" },
-    };
-  }
-
   try {
-    const loanRepo = getLoanRepo();
-    // const collectLoan = collectLoanUseCase({ loanRepo });
-    // const updated = await collectLoan({ loanId });
-
-    const updated = { loanId, status: "collected" }; // TEMP stub
-
+    const updated = await collectLoan(loanId);
+    context.log(`collect-loan: success loanId=${loanId} status=${updated.status}`);
     return {
       status: 200,
       jsonBody: updated,
     };
   } catch (err: any) {
-    context.error("Error collecting loan:", err);
+    context.error(`collect-loan: failed loanId=${loanId}`, err);
     return {
       status: 500,
       jsonBody: { error: "Failed to collect loan" },

@@ -1,9 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { validateJwt } from "../auth/validateJwt";
 import { hasRole } from "../auth/requireRole";
-import { getLoanRepo } from "../config/appServices";
-// TODO: adjust this import to your actual use-case function
-// import { createLoanUseCase } from "../app/create-loan-usecase";
+import { createLoan } from "../app/create-loan";
 
 async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   // 1. Validate JWT
@@ -15,8 +13,10 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
     };
   }
 
-  // 2. Check role = student
-  if (!hasRole(claims, "student")) {
+  context.log(`create-loan-http: user ${claims.sub} attempting to reserve device`);
+
+  // 2. Check role = Student
+  if (!hasRole(claims, "Student")) {
     return {
       status: 403,
       jsonBody: { error: "Forbidden: only students can create loans" },
@@ -43,28 +43,18 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
   }
 
   try {
-    const loanRepo = getLoanRepo();
+    context.log(`create-loan-http: creating loan for user ${userId} and device ${deviceModelId}`);
 
-    // TODO: replace with your real use case call
-    // const createLoan = createLoanUseCase({ loanRepo });
-    // const result = await createLoan({ userId, deviceModelId });
+    const loan = await createLoan({ userId, deviceModelId });
 
-    // TEMP stub – remove once you wire real use case:
-    const result = {
-      id: "temporary-id",
-      userId,
-      deviceModelId,
-      status: "reserved",
-      reservedAt: new Date().toISOString(),
-      dueAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    };
+    context.log(`create-loan-http: success, loanId=${loan.id}`);
 
     return {
       status: 201,
-      jsonBody: result,
+      jsonBody: loan,
     };
   } catch (err: any) {
-    context.error("Error creating loan:", err);
+    context.error("create-loan-http: failed", err);
     return {
       status: 500,
       jsonBody: { error: "Failed to create loan" },

@@ -36,9 +36,6 @@ export async function validateJwt(req: HttpRequest): Promise<AuthClaims | null> 
       audience: AUDIENCE,
     });
 
-    console.log("JWT claims:", payload); // <--- TEMP debug
-    
-    
     return payload as AuthClaims;
   } catch (err) {
     console.warn("JWT validation failed:", err);

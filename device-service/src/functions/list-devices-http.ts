@@ -1,35 +1,25 @@
 // src/functions/list-devices-http.ts
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { listDevices } from "../app/list-devices";
+import { listDevices } from "../app/list-devices.js";
 
 export async function listDevicesHttpHandler(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  context.log("Handling GET /devices");
+  context.log("list-devices: request received");
 
   try {
     const devices = await listDevices();
-
+    context.log(`list-devices: success count=${devices.length}`);
     return {
       status: 200,
-      headers: {
-        "Content-Type": "application/json"
-      },
       jsonBody: devices
     };
   } catch (err: any) {
-    context.error("Error in listDevicesHttpHandler", err);
-
+    context.error("list-devices: failed", err);
     return {
       status: 500,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      jsonBody: {
-        error: "Internal Server Error",
-        message: err?.message ?? "Unknown error"
-      }
+      jsonBody: { error: "Failed to list devices" }
     };
   }
 }
