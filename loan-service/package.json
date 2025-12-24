@@ -1,11 +1,12 @@
 {
-  "name": "",
+  "name": "loan-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/src/functions/*.js",
+  "description": "Campus Device Loan Service",
+  "main": "dist/src/index.js",
+  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "tsc --module ESNext",
+    "watch": "tsc -w --module ESNext",
     "clean": "rimraf dist",
     "prestart": "npm run clean && npm run build",
     "start": "func start",
@@ -15,6 +16,7 @@
     "@azure/cosmos": "^4.7.0",
     "@azure/functions": "^4.0.0",
     "@azure/identity": "^4.13.0",
+    "jose": "^6.1.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

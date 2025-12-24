@@ -1,6 +1,6 @@
 // src/app/return-loan.ts
-import { getLoanRepo } from "../config/appServices";
-import { markLoanReturned, Loan } from "../domain/loan";
+import { getLoanRepo } from "../config/appServices.js";
+import { markLoanReturned, Loan } from "../domain/loan.js";
 
 export async function returnLoan(loanId: string): Promise<Loan> {
   const repo = getLoanRepo();

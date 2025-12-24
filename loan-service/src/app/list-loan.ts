@@ -1,5 +1,5 @@
-import { getLoanRepo } from "../config/appServices";
-import type { Loan } from "../domain/loan";
+import { getLoanRepo } from "../config/appServices.js";
+import type { Loan } from "../domain/loan.js";
 
 export async function listLoansForUser(userId: string): Promise<Loan[]> {
   const repo = getLoanRepo();

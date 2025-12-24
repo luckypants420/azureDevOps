@@ -1,6 +1,6 @@
 // src/app/list-devices.ts
-import type { IDeviceModel } from "../domain/device";
-import { getDeviceRepo } from "../config/appServices";
+import type { IDeviceModel } from "../domain/device.js";
+import { getDeviceRepo } from "../config/appServices.js";
 
 /**
  * Application use case: list all device models.

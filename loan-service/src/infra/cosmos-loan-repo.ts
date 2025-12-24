@@ -1,7 +1,7 @@
 
 import { CosmosClient, Container, Database } from "@azure/cosmos";
-import type { Loan } from "../domain/loan";
-import { LoanRepo, LoanRepositoryError } from "../domain/loan-repo";
+import type { Loan } from "../domain/loan.js";
+import { LoanRepo, LoanRepositoryError } from "../domain/loan-repo.js";
 
 /**
  * DTO for Cosmos DB document.

@@ -1,36 +1,58 @@
-// src/functions/return-loan-http.ts
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { returnLoan } from "../app/return-loan";
+import { validateJwt } from "../auth/validateJwt.js";
+import { hasRole } from "../auth/requireRole.js";
+import { returnLoan } from "../app/return-loan.js";
 
-export async function returnLoanHttpHandler(
-  request: HttpRequest,
-  context: InvocationContext
-): Promise<HttpResponseInit> {
-  const id = request.params.id;
+async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  context.log("return-loan: request received");
 
-  try {
-    const loan = await returnLoan(id);
-    return {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-      jsonBody: loan
-    };
-  } catch (err: any) {
-    context.error("Error in returnLoanHttpHandler", err);
+  const loanId = request.params.loanId;
+  context.log(`return-loan: loanId=${loanId}`);
+
+  if (!loanId) {
+    context.log("return-loan: 400 missing loanId");
     return {
       status: 400,
-      headers: { "Content-Type": "application/json" },
-      jsonBody: {
-        error: "Bad Request",
-        message: err?.message ?? "Unknown error"
-      }
+      jsonBody: { error: "loanId route parameter is required" },
+    };
+  }
+
+  const claims = await validateJwt(request);
+  if (!claims) {
+    context.log("return-loan: 401 missing/invalid token");
+    return {
+      status: 401,
+      jsonBody: { error: "Unauthorized: missing or invalid token" },
+    };
+  }
+
+  if (!hasRole(claims, "Staff")) {
+    context.log(`return-loan: 403 forbidden for sub=${claims.sub}`);
+    return {
+      status: 403,
+      jsonBody: { error: "Forbidden: only staff can return loans" },
+    };
+  }
+
+  try {
+    const updated = await returnLoan(loanId);
+    context.log(`return-loan: success loanId=${loanId} status=${updated.status}`);
+    return {
+      status: 200,
+      jsonBody: updated,
+    };
+  } catch (err: any) {
+    context.error(`return-loan: failed loanId=${loanId}`, err);
+    return {
+      status: 500,
+      jsonBody: { error: "Failed to return loan" },
     };
   }
 }
 
-app.http("return-loan", {
+app.http("return-loan-http", {
   methods: ["POST"],
-  authLevel: "anonymous", // later: staff only
-  route: "loans/{id}/return",
-  handler: returnLoanHttpHandler
+  route: "loans/{loanId}/return",
+  authLevel: "anonymous",
+  handler,
 });

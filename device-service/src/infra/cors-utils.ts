@@ -1,7 +1,3 @@
-/**
- * Add simple CORS headers to HTTP responses returned by Azure Functions.
- * Keep it minimal for dev; in production prefer restricting origins.
- */
 
 export function withCorsHeaders(response: any): any {
     return {

@@ -1,6 +1,6 @@
 // src/config/appServices.ts
-import type { IDeviceRepo } from "../domain/device-repo";
-import { CosmosDeviceRepo } from "../infra/cosmos-device-repo";
+import type { IDeviceRepo } from "../domain/device-repo.js";
+import { CosmosDeviceRepo } from "../infra/cosmos-device-repo.js";
 
 let deviceRepo: IDeviceRepo | null = null;
 

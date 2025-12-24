@@ -1,5 +1,5 @@
-import { getLoanRepo } from "../config/appServices";
-import { markLoanCollected, Loan } from "../domain/loan";
+import { getLoanRepo } from "../config/appServices.js";
+import { markLoanCollected, Loan } from "../domain/loan.js";
 
 export async function collectLoan(loanId: string): Promise<Loan> {
   const repo = getLoanRepo();

@@ -1,6 +1,6 @@
 import { CosmosClient, Container, Database } from '@azure/cosmos';
-import { IDeviceModel } from '../domain/device';
-import { IDeviceRepo, RepositoryError } from '../domain/device-repo';
+import { IDeviceModel } from '../domain/device.js';
+import { IDeviceRepo, RepositoryError } from '../domain/device-repo.js';
 
 
 
