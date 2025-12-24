@@ -1,8 +1,8 @@
 {
-  "name": "",
+  "name": "device-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/src/functions/*.js",
+  "description": "Campus Device Catalog Service",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",

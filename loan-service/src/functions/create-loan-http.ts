@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { validateJwt } from "../auth/validateJwt";
-import { hasRole } from "../auth/requireRole";
-import { createLoan } from "../app/create-loan";
+import { validateJwt } from "../auth/validateJwt.js";
+import { hasRole } from "../auth/requireRole.js";
+import { createLoan } from "../app/create-loan.js";
 
 async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   // 1. Validate JWT

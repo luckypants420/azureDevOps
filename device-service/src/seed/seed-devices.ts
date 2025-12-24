@@ -1,4 +1,4 @@
-import { getDeviceRepo } from "../config/appServices";
+import { getDeviceRepo } from "../config/appServices.js";
 import { seedDevices } from "./devices-data";
 
 async function run() {

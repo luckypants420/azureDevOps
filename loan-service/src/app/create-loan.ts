@@ -1,5 +1,5 @@
-import { createNewLoan, Loan } from "../domain/loan";
-import { getLoanRepo } from "../config/appServices";
+import { createNewLoan, Loan } from "../domain/loan.js";
+import { getLoanRepo } from "../config/appServices.js";
 
 export interface CreateLoanRequest {
     userId: string;

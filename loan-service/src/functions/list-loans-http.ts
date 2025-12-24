@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { validateJwt } from "../auth/validateJwt";
-import { hasRole } from "../auth/requireRole";
-import { listLoansForUser } from "../app/list-loan";
+import { validateJwt } from "../auth/validateJwt.js";
+import { hasRole } from "../auth/requireRole.js";
+import { listLoansForUser } from "../app/list-loan.js";
 
 async function handler(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   context.log("list-loans: request received");

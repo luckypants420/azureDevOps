@@ -1,6 +1,6 @@
 // src/config/appServices.ts
-import type { LoanRepo } from "../domain/loan-repo";
-import { CosmosLoanRepo } from "../infra/cosmos-loan-repo";
+import type { LoanRepo } from "../domain/loan-repo.js";
+import { CosmosLoanRepo } from "../infra/cosmos-loan-repo.js";
 
 let loanRepo: LoanRepo | null = null;
 

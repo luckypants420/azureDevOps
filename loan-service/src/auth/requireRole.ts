@@ -1,4 +1,4 @@
-import type { AuthClaims } from "./validateJwt";
+import type { AuthClaims } from "./validateJwt.js";
 
 /**
  * Claim name where roles are stored in the token.

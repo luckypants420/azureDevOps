@@ -1,4 +1,4 @@
-import type { IDeviceModel } from "../domain/device";
+import type { IDeviceModel } from "../domain/device.js";
 
 export const seedDevices: IDeviceModel[] = [
   {
