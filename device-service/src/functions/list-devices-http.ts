@@ -1,4 +1,3 @@
-// src/functions/list-devices-http.ts
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { listDevices } from "../app/list-devices.js";
 
@@ -31,3 +30,4 @@ app.http("list-devices", {
   route: "devices",
   handler: listDevicesHttpHandler
 });
+

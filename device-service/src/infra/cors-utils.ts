@@ -1,4 +1,3 @@
-
 export function withCorsHeaders(response: any): any {
     return {
         ...response,
