@@ -1,14 +1,23 @@
-name: build
+name: Loan Service Build
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "loan-service/**"
+      - ".github/workflows/loan-service-build.yml"
   pull_request:
     branches: ["main"]
+    paths:
+      - "loan-service/**"
+      - ".github/workflows/loan-service-build.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: loan-service
 
     steps:
       - name: Checkout
@@ -19,6 +28,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: loan-service/package-lock.json
 
       - name: Install
         run: npm ci
