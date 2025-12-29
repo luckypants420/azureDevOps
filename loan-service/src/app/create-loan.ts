@@ -17,8 +17,6 @@ export async function createLoan(req: CreateLoanRequest): Promise<Loan> {
     // Dynamically import uuid to handle ESM compatibility
     const { v4: uuidv4 } = await import("uuid");
 
-    // TODO later: check availability with Device service
-
     const loan = createNewLoan({
         id: uuidv4(),
         userId: req.userId,

@@ -12,7 +12,5 @@ export async function returnLoan(loanId: string): Promise<Loan> {
 
   const updated = markLoanReturned(existing);
 
-  // TODO later: publish DeviceReturned event to Event Grid
-
   return await repo.update(updated);
 }

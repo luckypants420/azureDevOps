@@ -15,11 +15,11 @@ async function handler(request: HttpRequest, context: InvocationContext): Promis
 
   context.log(`create-loan-http: user ${claims.sub} attempting to reserve device`);
 
-  // 2. Check role = Student
-  if (!hasRole(claims, "Student")) {
+  // 2. Check role = Student or Staff
+  if (!hasRole(claims, "Student") && !hasRole(claims, "Staff")) {
     return {
       status: 403,
-      jsonBody: { error: "Forbidden: only students can create loans" },
+      jsonBody: { error: "Forbidden: only students and staff can create loans" },
     };
   }
 
