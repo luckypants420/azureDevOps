@@ -36,6 +36,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
 
@@ -50,3 +53,10 @@ jobs:
               --destination '$web' \
               --source ./loans-web/dist \
               --overwrite
+
+      - name: Integration Tests
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npm run test:integration
+        env:
+          VITE_DEVICES_API_BASE: https://devices-test-da007-func.azurewebsites.net/api
+          VITE_LOANS_API_BASE: https://loans-test-da007-func.azurewebsites.net/api
