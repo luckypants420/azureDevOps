@@ -35,6 +35,10 @@ export class FakeDeviceRepo implements IDeviceRepo {
         return Array.from(this.devices.values());
     }
 
+    async listAll(): Promise<IDeviceModel[]> {
+        return Array.from(this.devices.values());
+    }
+
     async save(device: IDeviceModel): Promise<IDeviceModel> {
         this.devices.set(device.id, device);
         return device;
