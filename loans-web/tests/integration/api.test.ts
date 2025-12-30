@@ -8,29 +8,28 @@ const LOANS_API_BASE = process.env.VITE_LOANS_API_BASE || 'https://loans-test-da
 describe('Devices API Integration', () => {
     it('should fetch devices from the API', async () => {
         const response = await fetch(`${DEVICES_API_BASE}/devices`);
+
+        expect(response.ok).toBe(true);
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+
+        expect(Array.isArray(data)).toBe(true);
+        if (data.length > 0) {
+            expect(data[0]).toHaveProperty('id');
+            expect(data[0]).toHaveProperty('brand');
+            expect(data[0]).toHaveProperty('model');
+            expect(data[0]).toHaveProperty('category');
+            expect(data[0]).toHaveProperty('totalQuantity');
+        }
     }, 10000);
 
-    expect(response.ok).toBe(true);
-    expect(response.status).toBe(200);
+    it('should return JSON content-type', async () => {
+        const response = await fetch(`${DEVICES_API_BASE}/devices`);
 
-    const data = await response.json();
-
-    expect(Array.isArray(data)).toBe(true);
-    if (data.length > 0) {
-        expect(data[0]).toHaveProperty('id');
-        expect(data[0]).toHaveProperty('brand');
-        expect(data[0]).toHaveProperty('model');
-        expect(data[0]).toHaveProperty('category');
-        expect(data[0]).toHaveProperty('totalQuantity');
-    }
-});
-
-it('should return JSON content-type', async () => {
-    const response = await fetch(`${DEVICES_API_BASE}/devices`);
-
-    const contentType = response.headers.get('content-type');
-    expect(contentType).toContain('application/json');
-});
+        const contentType = response.headers.get('content-type');
+        expect(contentType).toContain('application/json');
+    });
 });
 
 describe('Loans API Integration', () => {
