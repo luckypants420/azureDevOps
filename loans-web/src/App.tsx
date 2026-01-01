@@ -155,7 +155,7 @@ function App() {
 
       // Refresh both staff view and personal view
       await loadLoans();
-      
+
       // If we have a userId from staff panel, refresh that too
       if (userIdForRefresh) {
         await loadStaffLoansForUser(userIdForRefresh);
@@ -177,7 +177,7 @@ function App() {
 
       // Refresh both staff view and personal view
       await loadLoans();
-      
+
       // If we have a userId from staff panel, refresh that too
       if (userIdForRefresh) {
         await loadStaffLoansForUser(userIdForRefresh);
@@ -225,6 +225,9 @@ function App() {
             <p>
               Welcome, {user?.name ?? user?.email ?? 'User'}!{' '}
               {isStaff && <strong>(Staff)</strong>}
+            </p>
+            <p style={{ fontSize: '0.85rem', color: '#666', margin: '0.25rem 0' }}>
+              User ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '3px' }}>{user?.sub}</code>
             </p>
             <button
               onClick={() =>
