@@ -41,6 +41,12 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_DEVICES_API_BASE: https://devices-test-da007-func.azurewebsites.net/api
+          VITE_LOANS_API_BASE: https://loans-test-da007-func.azurewebsites.net/api
+          VITE_AUTH0_DOMAIN: dev-ibrs110c8z3nfo15.us.auth0.com
+          VITE_AUTH0_CLIENT_ID: M4s54eRo97uWjLlu8w2P6b8EZCmeNYWi
+          VITE_AUTH0_AUDIENCE: https://loans-api-da007
 
       - name: Upload to Azure Static Website
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
