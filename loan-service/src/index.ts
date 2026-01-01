@@ -3,3 +3,4 @@ import "./functions/create-loan-http.js";
 import "./functions/list-loans-http.js";
 import "./functions/collect-loan-http.js";
 import "./functions/return-loan-http.js";
+import "./functions/health-http.js";
